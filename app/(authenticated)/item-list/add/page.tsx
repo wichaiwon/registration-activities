@@ -1,7 +1,7 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { createCustomer } from '@/lib/customer'
+import { addCustomer } from '../actions'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 import { toast } from 'sonner'
@@ -25,7 +25,7 @@ const AddCustomer: React.FC = () => {
       })
       return
     }
-    createCustomer(firstname, lastname)
+    addCustomer(firstname, lastname)
       .then(() => {
         toast('เพิ่มข้อมูลสำเร็จ', {
           description: `เพิ่ม ${firstname} ${lastname} เรียบร้อยแล้ว`,
