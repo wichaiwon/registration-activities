@@ -1,6 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
-import ItemList from './item-list/page'
+import ItemList from './customer/page'
 
 export default async function Page() {
     const supabase = await createClient()
