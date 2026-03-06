@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/pagination'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Customer } from '@/lib/customer'
-import { fetchCustomers } from './actions'
+import { fetchCustomers, removeCustomer } from './actions'
 import { EditIcon, PlusIcon, TrashIcon } from 'lucide-react'
 import React, { useState } from 'react'
 import useSWR from 'swr'
@@ -24,15 +24,26 @@ const ItemList: React.FC = () => {
   const router = useRouter()
   const [page, setPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
-  const { data, isLoading } = useSWR(['customers', page, pageSize], () => fetchCustomers(page, pageSize), {
-    keepPreviousData: true,
-  })
+  const [search, setSearch] = useState<string>('')
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const { data, isLoading, mutate } = useSWR(
+    ['customers', page, pageSize, searchQuery],
+    () => fetchCustomers(page, pageSize, searchQuery),
+    {
+      keepPreviousData: true,
+    }
+  )
   const customers = data && data.data ? data.data : []
   const totalPages = data && data.totalPages ? data.totalPages : 1
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return
     setPage(newPage)
+  }
+
+  const handleSearch = () => {
+    setPage(1) // reset กลับหน้า 1 เมื่อ search
+    setSearchQuery(search)
   }
   return (
     <div className="h-full">
@@ -47,13 +58,19 @@ const ItemList: React.FC = () => {
               setPageSize(Number(e.target.value))
             }}
           >
-            <NativeSelectOption value={10}>10</NativeSelectOption>
-            <NativeSelectOption value={25}>25</NativeSelectOption>
-            <NativeSelectOption value={50}>50</NativeSelectOption>
-            <NativeSelectOption value={100}>100</NativeSelectOption>
+            {[10, 25, 50, 100].map((size) => (
+              <NativeSelectOption key={size} value={size}>
+                {size}
+              </NativeSelectOption>
+            ))}
           </NativeSelect>
-          <Input placeholder="Search..." />
-          <Button variant="outline" size={'lg'}>
+          <Input
+            placeholder="Search..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <Button variant="outline" size={'lg'} onClick={handleSearch}>
             Search
           </Button>
         </div>
@@ -66,13 +83,19 @@ const ItemList: React.FC = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-center">action</TableHead>
-              <TableHead className="text-center">firstName</TableHead>
-              <TableHead className="text-center">lastName</TableHead>
-              <TableHead className="text-center">createdBy</TableHead>
-              <TableHead className="text-center">createdAt</TableHead>
-              <TableHead className="text-center">updatedBy</TableHead>
-              <TableHead className="text-center">updatedAt</TableHead>
+              {[
+                { key: 'action', label: 'action', className: 'text-center' },
+                { key: 'firstname', label: 'firstName', className: 'text-center' },
+                { key: 'lastname', label: 'lastName', className: 'text-center' },
+                { key: 'created_by', label: 'createdBy', className: 'text-center' },
+                { key: 'created_at', label: 'createdAt', className: 'text-center' },
+                { key: 'updated_by', label: 'updatedBy', className: 'text-center' },
+                { key: 'updated_at', label: 'updatedAt', className: 'text-center' },
+              ].map((col) => (
+                <TableHead key={col.key} className={col.className}>
+                  {col.label}
+                </TableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -94,7 +117,7 @@ const ItemList: React.FC = () => {
                   <TableCell>
                     <div className="flex gap-2 justify-center items-center">
                       <Button
-                      onClick={()=> router.push(`/item-list/edit/${customer.id}`)}
+                        onClick={() => router.push(`/item-list/edit/${customer.id}`)}
                         variant="outline"
                         className="text-yellow-500 hover:text-yellow-600 hover:border-yellow-600 border-yellow-500"
                         size={'sm'}
@@ -105,6 +128,10 @@ const ItemList: React.FC = () => {
                         variant="outline"
                         className="text-red-500 border-red-500 hover:text-red-600 hover:border-red-600"
                         size={'sm'}
+                        onClick={async () => {
+                          await removeCustomer(customer.id)
+                          mutate()
+                        }}
                       >
                         <TrashIcon />
                       </Button>
@@ -131,7 +158,6 @@ const ItemList: React.FC = () => {
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                href="#"
                 onClick={(e) => {
                   e.preventDefault()
                   handlePageChange(page - 1)
@@ -143,7 +169,6 @@ const ItemList: React.FC = () => {
               <>
                 <PaginationItem key="first">
                   <PaginationLink
-                    href="#"
                     isActive={page === 1}
                     onClick={(e) => {
                       e.preventDefault()
@@ -163,7 +188,6 @@ const ItemList: React.FC = () => {
                   (pageNumber) => (
                     <PaginationItem key={`middle-${pageNumber}`}>
                       <PaginationLink
-                        href="#"
                         isActive={page === pageNumber}
                         onClick={(e) => {
                           e.preventDefault()
@@ -182,7 +206,6 @@ const ItemList: React.FC = () => {
                 )}
                 <PaginationItem key="last">
                   <PaginationLink
-                    href="#"
                     isActive={page === totalPages}
                     onClick={(e) => {
                       e.preventDefault()
@@ -197,7 +220,6 @@ const ItemList: React.FC = () => {
               [...Array(totalPages)].map((_, idx) => (
                 <PaginationItem key={`page-${idx + 1}`}>
                   <PaginationLink
-                    href="#"
                     isActive={page === idx + 1}
                     onClick={(e) => {
                       e.preventDefault()
