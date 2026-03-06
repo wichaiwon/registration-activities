@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/client"
+import { createClient } from "@/utils/supabase/server"
 import axios from "axios"
 
 export type Customer = {
@@ -18,22 +18,41 @@ export type PaginatedResponse<T> = {
     page: number
     pageSize: number
 }
-const supabase = createClient()
 
-export const getCustomers = async (
-    page: number,
-    pageSize: number
-): Promise<PaginatedResponse<Customer>> => {
+
+const getSession = async () => {
+    const supabase = await createClient()
+    const {
+        data: { session },
+    } = await supabase.auth.getSession()
+    if (!session) throw new Error("User not logged in")
+    return session
+}
+
+const getApiConfig = () => {
     const url = process.env.NEXT_PUBLIC_CUSTOMERS_API_URL
     if (!url) throw new Error("API URL is not defined")
     const apiKey = process.env.NEXT_PUBLIC_API_KEY
     if (!apiKey) throw new Error("API key is not defined")
+    return { url, apiKey }
+}
+
+export const getCustomers = async (
+    page: number,
+    pageSize: number,
+    search?: string
+): Promise<PaginatedResponse<Customer>> => {
+    const session = await getSession()
+    const { url, apiKey } = getApiConfig()
     const start = (page - 1) * pageSize
     const end = start + pageSize - 1
-    const response = await axios.get(`${url}?select=*`, {
+    const searchQuery = search
+        ? `&or=(firstname.ilike.*${search}*,lastname.ilike.*${search}*)`
+        : ''
+    const response = await axios.get(`${url}?select=*${searchQuery}`, {
         headers: {
             apikey: apiKey,
-            Authorization: `Bearer ${apiKey}`,
+            Authorization: `Bearer ${session.access_token}`,
             Range: `${start}-${end}`,
             Prefer: "count=exact",
         },
@@ -51,31 +70,21 @@ export const getCustomers = async (
 }
 
 export const getCustomerById = async (id: string): Promise<Customer> => {
-    const url = process.env.NEXT_PUBLIC_CUSTOMERS_API_URL
-    if (!url) throw new Error("API URL is not defined")
-    const apiKey = process.env.NEXT_PUBLIC_API_KEY
-    if (!apiKey) throw new Error("API key is not defined")
+    const session = await getSession()
+    const { url, apiKey } = getApiConfig()
     const response = await axios.get(`${url}?id=eq.${id}&select=*`, {
         headers: {
             apikey: apiKey,
+            Authorization: `Bearer ${session.access_token}`,
             Accept: "application/vnd.pgrst.object+json",
         },
     })
-
     return response.data
 }
 
 export const createCustomer = async (firstname: string, lastname: string): Promise<Customer> => {
-    const url = process.env.NEXT_PUBLIC_CUSTOMERS_API_URL
-    if (!url) throw new Error("API URL is not defined")
-    const apiKey = process.env.NEXT_PUBLIC_API_KEY
-    if (!apiKey) throw new Error("API key is not defined")
-    const {
-        data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) throw new Error("User not logged in")
-
+    const session = await getSession()
+    const { url, apiKey } = getApiConfig()
     const response = await axios.post(
         url,
         { firstname, lastname },
@@ -91,17 +100,15 @@ export const createCustomer = async (firstname: string, lastname: string): Promi
 }
 
 export const updateCustomer = async (firstname: string, lastname: string, id: string): Promise<Customer> => {
-    const url = process.env.NEXT_PUBLIC_CUSTOMERS_API_URL
-    if (!url) throw new Error("API URL is not defined")
-    const apiKey = process.env.NEXT_PUBLIC_API_KEY
-    if (!apiKey) throw new Error("API key is not defined")
+    const session = await getSession()
+    const { url, apiKey } = getApiConfig()
     const response = await axios.patch(
         `${url}?id=eq.${id}`,
-        { firstname, lastname },
+        { firstname, lastname, updated_by: session.user.id },
         {
             headers: {
                 apikey: apiKey,
-                // Authorization: `Bearer ${apiKey}`,
+                Authorization: `Bearer ${session.access_token}`,
                 "Content-Type": "application/json",
             },
         }
@@ -110,14 +117,14 @@ export const updateCustomer = async (firstname: string, lastname: string, id: st
 }
 
 export const deleteCustomer = async (id: string): Promise<void> => {
-    const url = process.env.NEXT_PUBLIC_CUSTOMERS_API_URL
-    if (!url) throw new Error("API URL is not defined")
-    const apiKey = process.env.NEXT_PUBLIC_API_KEY
-    if (!apiKey) throw new Error("API key is not defined")
+    const session = await getSession()
+    const { url, apiKey } = getApiConfig()
     await axios.delete(`${url}?id=eq.${id}`, {
         headers: {
             apikey: apiKey,
-            // Authorization: `Bearer ${apiKey}`,
+            Authorization: `Bearer ${session.access_token}`,
         },
     })
 }
+
+
