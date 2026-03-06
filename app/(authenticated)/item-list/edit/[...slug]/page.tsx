@@ -1,18 +1,19 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { getCustomerById, updateCustomer } from '@/lib/customer'
-import { usePathname } from 'next/navigation'
+import { fetchCustomerById, editCustomer } from '../../actions'
+import { usePathname, useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 import useSWR from 'swr'
 import { toast } from 'sonner'
 
 const EditCustomer: React.FC = () => {
+  const router = useRouter()
   const pathname = usePathname().split('/')
   const id = pathname[pathname.length - 1]
   const [firstname, setFirstname] = useState<string>('')
   const [lastname, setLastname] = useState<string>('')
-  const { isLoading } = useSWR(['customer', id], () => getCustomerById(id), {
+  const { isLoading } = useSWR(['customer', id], () => fetchCustomerById(id), {
     onSuccess: (data) => {
       setFirstname(data.firstname)
       setLastname(data.lastname)
@@ -32,7 +33,7 @@ const EditCustomer: React.FC = () => {
       })
       return
     }
-    await updateCustomer(firstname, lastname, id)
+    await editCustomer(firstname, lastname, id)
       .then(() => {
         toast('แก้ไขข้อมูลสำเร็จ', {
           description: `แก้ไข ${firstname} ${lastname} เรียบร้อยแล้ว`,
@@ -41,6 +42,7 @@ const EditCustomer: React.FC = () => {
             onClick: () => {},
           },
         })
+        router.replace('/item-list')
       })
       .catch((err: unknown) => {
         const message = err instanceof Error ? err.message : 'ไม่สามารถแก้ไขข้อมูลได้'
