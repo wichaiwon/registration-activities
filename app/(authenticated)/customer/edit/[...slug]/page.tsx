@@ -57,7 +57,7 @@ const EditCustomer: React.FC = () => {
   }
   return (
     <div className="flex flex-col justify-center items-center h-full">
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 w-full max-w-md">
         <p className="text-2xl font-bold ">Edit Item</p>
         {isLoading ? (
           <p>Loading...</p>

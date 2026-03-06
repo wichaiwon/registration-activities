@@ -42,9 +42,10 @@ const ItemList: React.FC = () => {
   }
 
   const handleSearch = () => {
-    setPage(1) // reset กลับหน้า 1 เมื่อ search
+    setPage(1)
     setSearchQuery(search)
   }
+  
   return (
     <div className="h-full">
       <div className="flex flex-col gap-4">

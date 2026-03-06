@@ -49,7 +49,7 @@ const AddCustomer: React.FC = () => {
   }
   return (
     <div className="flex flex-col justify-center items-center h-full">
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 w-full max-w-md">
         <p className="text-2xl font-bold ">Add Item</p>
         <Input placeholder="firstname" value={firstname} onChange={(e) => setFirstname(e.target.value)} />
         <Input placeholder="lastname" value={lastname} onChange={(e) => setLastname(e.target.value)} />
