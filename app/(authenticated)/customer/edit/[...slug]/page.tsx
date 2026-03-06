@@ -42,7 +42,7 @@ const EditCustomer: React.FC = () => {
             onClick: () => {},
           },
         })
-        router.replace('/item-list')
+        router.replace('/customer')
       })
       .catch((err: unknown) => {
         const message = err instanceof Error ? err.message : 'ไม่สามารถแก้ไขข้อมูลได้'

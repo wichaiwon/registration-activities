@@ -75,7 +75,7 @@ const ItemList: React.FC = () => {
           </Button>
         </div>
         <div className="flex w-full justify-end items-center">
-          <Button variant="secondary" size={'lg'} onClick={() => router.push(`/item-list/add`)}>
+          <Button variant="secondary" size={'lg'} onClick={() => router.push(`/customer/add`)}>
             <span>Add Item</span>
             <PlusIcon />
           </Button>
@@ -117,7 +117,7 @@ const ItemList: React.FC = () => {
                   <TableCell>
                     <div className="flex gap-2 justify-center items-center">
                       <Button
-                        onClick={() => router.push(`/item-list/edit/${customer.id}`)}
+                        onClick={() => router.push(`/customer/edit/${customer.id}`)}
                         variant="outline"
                         className="text-yellow-500 hover:text-yellow-600 hover:border-yellow-600 border-yellow-500"
                         size={'sm'}
@@ -149,7 +149,7 @@ const ItemList: React.FC = () => {
           </TableBody>
         </Table>
         <div className="flex w-full justify-end items-center">
-          <Button variant="secondary" size={'lg'} onClick={() => router.push(`/item-list/add`)}>
+          <Button variant="secondary" size={'lg'} onClick={() => router.push(`/customer/add`)}>
             <span>Add Item</span>
             <PlusIcon />
           </Button>
