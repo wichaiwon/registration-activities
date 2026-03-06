@@ -20,7 +20,7 @@ export type PaginatedResponse<T> = {
 }
 
 
-const getSession = async () => {
+export const getSession = async () => {
     const supabase = await createClient()
     const {
         data: { session },
@@ -29,7 +29,7 @@ const getSession = async () => {
     return session
 }
 
-const getApiConfig = () => {
+export const getApiConfig = () => {
     const url = process.env.NEXT_PUBLIC_CUSTOMERS_API_URL
     if (!url) throw new Error("API URL is not defined")
     const apiKey = process.env.NEXT_PUBLIC_API_KEY
