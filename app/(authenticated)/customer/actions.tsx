@@ -8,6 +8,8 @@ import {
   updateCustomer,
   deleteCustomer,
   PaginatedResponse,
+  getAllCustomers,
+  getUserEmailsByIds,
 } from '@/lib/customer'
 
 export async function fetchCustomers(page: number, pageSize: number, search?: string, sortColumn?: string, sortDirection?: 'asc' | 'desc'): Promise<PaginatedResponse<Customer>> {
@@ -28,4 +30,8 @@ export async function editCustomer(firstname: string, lastname: string, id: stri
 
 export async function removeCustomer(id: string): Promise<void> {
   return deleteCustomer(id)
+}
+
+export async function fetchUserEmails(ids: string[]): Promise<Record<string, string>> {
+  return getUserEmailsByIds(ids)
 }

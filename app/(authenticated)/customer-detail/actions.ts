@@ -9,7 +9,7 @@ import {
   updateCustomerDetail,
   deleteCustomerDetail,
 } from '@/lib/customer-detail'
-import { PaginatedResponse, Customer, getAllCustomers } from '@/lib/customer'
+import { PaginatedResponse, Customer, getAllCustomers, getUserEmailsByIds } from '@/lib/customer'
 import { getProvinces, Province } from '@/lib/province'
 
 export async function fetchCustomerDetails(
@@ -58,6 +58,10 @@ export async function removeCustomerDetail(id: string): Promise<void> {
 
 export async function fetchAllCustomers(): Promise<Customer[]> {
   return getAllCustomers()
+}
+
+export async function fetchUserEmails(ids: string[]): Promise<Record<string, string>> {
+  return getUserEmailsByIds(ids)
 }
 
 export async function fetchProvinces(): Promise<Province[]> {

@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/pagination'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Customer } from '@/lib/customer'
-import { fetchCustomers, removeCustomer } from './actions'
+import { fetchCustomers, removeCustomer, fetchUserEmails } from './actions'
 import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, EditIcon, PlusIcon, TrashIcon } from 'lucide-react'
 import React, { useState } from 'react'
 import useSWR from 'swr'
@@ -38,6 +38,12 @@ const ItemList: React.FC = () => {
   )
   const customers = data && data.data ? data.data : []
   const totalPages = data && data.totalPages ? data.totalPages : 1
+
+  const userIds = [...new Set(customers.flatMap((c) => [c.created_by, c.updated_by].filter(Boolean)))]
+  const { data: emailMap } = useSWR(
+    userIds.length > 0 ? ['userEmails', ...userIds] : null,
+    () => fetchUserEmails(userIds)
+  )
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return
@@ -169,9 +175,9 @@ const ItemList: React.FC = () => {
                   </TableCell>
                   <TableCell className="text-center">{customer.firstname}</TableCell>
                   <TableCell className="text-center">{customer.lastname}</TableCell>
-                  <TableCell className="text-center">{customer.created_by}</TableCell>
+                  <TableCell className="text-center">{emailMap?.[customer.created_by] ?? customer.created_by}</TableCell>
                   <TableCell className="text-center">{new Date(customer.created_at).toLocaleDateString()}</TableCell>
-                  <TableCell className="text-center">{customer.updated_by}</TableCell>
+                  <TableCell className="text-center">{emailMap?.[customer.updated_by] ?? customer.updated_by}</TableCell>
                   <TableCell className="text-center">{new Date(customer.updated_at).toLocaleDateString()}</TableCell>
                 </TableRow>
               ))

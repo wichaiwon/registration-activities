@@ -142,3 +142,20 @@ export const getAllCustomers = async (): Promise<Customer[]> => {
     return response.data
 }
 
+export const getUserEmailsByIds = async (ids: string[]): Promise<Record<string, string>> => {
+    if (ids.length === 0) return {}
+    const { createAdminClient } = await import('@/utils/supabase/server')
+    const admin = createAdminClient()
+    const unique = [...new Set(ids)]
+    const results = await Promise.all(
+        unique.map((id) => admin.auth.admin.getUserById(id))
+    )
+    const map: Record<string, string> = {}
+    results.forEach((res, i) => {
+        if (res.data?.user?.email) {
+            map[unique[i]] = res.data.user.email
+        }
+    })
+    return map
+}
+

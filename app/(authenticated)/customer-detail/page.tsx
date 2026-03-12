@@ -17,7 +17,7 @@ import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, EditIcon, PlusIcon, TrashI
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
-import { fetchCustomerDetails, fetchAllCustomers, removeCustomerDetail } from './actions'
+import { fetchCustomerDetails, fetchAllCustomers, removeCustomerDetail, fetchUserEmails } from './actions'
 
 const CustomerDetail: React.FC = () => {
   const router = useRouter()
@@ -36,6 +36,12 @@ const CustomerDetail: React.FC = () => {
   const customerMap = new Map(customers?.map((c) => [c.id, `${c.firstname} ${c.lastname}`]))
   const customerDetails = data?.data ?? []
   const totalPages = data?.totalPages ?? 1
+
+  const userIds = [...new Set(customerDetails.flatMap((d) => [d.created_by, d.updated_by].filter(Boolean)))]
+  const { data: emailMap } = useSWR(
+    userIds.length > 0 ? ['userEmails', ...userIds] : null,
+    () => fetchUserEmails(userIds)
+  )
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return
     setPage(newPage)
@@ -166,9 +172,9 @@ const CustomerDetail: React.FC = () => {
                 <TableCell className="text-center">{customerdetail.province}</TableCell>
                 <TableCell className="text-center">{customerdetail.district}</TableCell>
                 <TableCell className="text-center">{customerdetail.sub_district}</TableCell>
-                <TableCell className="text-center">{customerdetail.created_by}</TableCell>
+                <TableCell className="text-center">{emailMap?.[customerdetail.created_by] ?? customerdetail.created_by}</TableCell>
                 <TableCell className="text-center">{new Date(customerdetail.created_at).toLocaleDateString()}</TableCell>
-                <TableCell className="text-center">{customerdetail.updated_by}</TableCell>
+                <TableCell className="text-center">{emailMap?.[customerdetail.updated_by] ?? customerdetail.updated_by}</TableCell>
                 <TableCell className="text-center">{new Date(customerdetail.updated_at).toLocaleDateString()}</TableCell>
               </TableRow>
             ))}
