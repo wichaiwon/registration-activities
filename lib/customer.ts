@@ -130,4 +130,15 @@ export const deleteCustomer = async (id: string): Promise<void> => {
     })
 }
 
+export const getAllCustomers = async (): Promise<Customer[]> => {
+    const session = await getSession()
+    const { url, apiKey } = getApiConfig()
+    const response = await axios.get(`${url}?select=id,firstname,lastname&order=firstname.asc`, {
+        headers: {
+            apikey: apiKey,
+            Authorization: `Bearer ${session.access_token}`,
+        },
+    })
+    return response.data
+}
 

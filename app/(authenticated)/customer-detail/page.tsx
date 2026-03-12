@@ -13,11 +13,11 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { EditIcon, PlusIcon, TrashIcon } from 'lucide-react'
+import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, EditIcon, PlusIcon, TrashIcon } from 'lucide-react'
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
-import { fetchCustomerDetails } from './actions'
+import { fetchCustomerDetails, fetchAllCustomers, removeCustomerDetail } from './actions'
 
 const CustomerDetail: React.FC = () => {
   const router = useRouter()
@@ -25,11 +25,15 @@ const CustomerDetail: React.FC = () => {
   const [pageSize, setPageSize] = useState<number>(10)
   const [search, setSearch] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState<string>('')
+  const [sortColumn, setSortColumn] = useState<string>('')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const { data, isLoading, mutate } = useSWR(
-    ['customerDetails', page, pageSize, searchQuery],
-    () => fetchCustomerDetails(page, pageSize, searchQuery),
+    ['customerDetails', page, pageSize, searchQuery, sortColumn, sortDirection],
+    () => fetchCustomerDetails(page, pageSize, searchQuery, sortColumn, sortDirection),
     { keepPreviousData: true }
   )
+  const { data: customers } = useSWR('allCustomers', fetchAllCustomers)
+  const customerMap = new Map(customers?.map((c) => [c.id, `${c.firstname} ${c.lastname}`]))
   const customerDetails = data?.data ?? []
   const totalPages = data?.totalPages ?? 1
   const handlePageChange = (newPage: number) => {
@@ -40,6 +44,23 @@ const CustomerDetail: React.FC = () => {
   const handleSearch = () => {
     setPage(1)
     setSearchQuery(search)
+  }
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
+    }
+    setPage(1)
+  }
+
+  const SortIcon = ({ column }: { column: string }) => {
+    if (sortColumn !== column) return <ArrowUpDownIcon className="inline ml-1 h-3 w-3 opacity-40" />
+    return sortDirection === 'asc'
+      ? <ArrowUpIcon className="inline ml-1 h-3 w-3" />
+      : <ArrowDownIcon className="inline ml-1 h-3 w-3" />
   }
 
   return (
@@ -81,21 +102,26 @@ const CustomerDetail: React.FC = () => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="text-center">action</TableHead>
+              <TableHead className="text-center">firstName-lastName</TableHead>
               {[
-                { key: 'action', label: 'action', className: 'text-center' },
-                { key: 'firstname-lastname', label: 'firstName-lastname', className: 'text-center' },
-                { key: 'phone_number', label: 'phoneNumber', className: 'text-center' },
-                { key: 'address', label: 'address', className: 'text-center' },
-                { key: 'province', label: 'province', className: 'text-center' },
-                { key: 'district', label: 'district', className: 'text-center' },
-                { key: 'sub_district', label: 'subDistrict', className: 'text-center' },
-                { key: 'created_by', label: 'createdBy', className: 'text-center' },
-                { key: 'created_at', label: 'createdAt', className: 'text-center' },
-                { key: 'updated_by', label: 'updatedBy', className: 'text-center' },
-                { key: 'updated_at', label: 'updatedAt', className: 'text-center' },
+                { key: 'phone_number', label: 'phoneNumber' },
+                { key: 'address', label: 'address' },
+                { key: 'province', label: 'province' },
+                { key: 'district', label: 'district' },
+                { key: 'sub_district', label: 'subDistrict' },
+                { key: 'created_by', label: 'createdBy' },
+                { key: 'created_at', label: 'createdAt' },
+                { key: 'updated_by', label: 'updatedBy' },
+                { key: 'updated_at', label: 'updatedAt' },
               ].map((col) => (
-                <TableHead key={col.key} className={col.className}>
+                <TableHead
+                  key={col.key}
+                  className="text-center cursor-pointer select-none hover:bg-muted/50"
+                  onClick={() => handleSort(col.key)}
+                >
                   {col.label}
+                  <SortIcon column={col.key} />
                 </TableHead>
               ))}
             </TableRow>
@@ -114,7 +140,7 @@ const CustomerDetail: React.FC = () => {
                 <TableCell>
                   <div className="flex gap-2 justify-center items-center">
                     <Button
-                      onClick={() => router.push(`/customer-detail/edit/${customerdetail.id}`)}
+                      onClick={() => router.push(`/customer-detail/edit/${customerdetail.customer_id}`)}
                       variant="outline"
                       className="text-yellow-500 hover:text-yellow-600 hover:border-yellow-600 border-yellow-500"
                       size={'sm'}
@@ -125,13 +151,16 @@ const CustomerDetail: React.FC = () => {
                       variant="outline"
                       className="text-red-500 border-red-500 hover:text-red-600 hover:border-red-600"
                       size={'sm'}
-                      onClick={() => {}}
+                      onClick={async () => {
+                        await removeCustomerDetail(customerdetail.id)
+                        mutate()
+                      }}
                     >
                       <TrashIcon />
                     </Button>
                   </div>
                 </TableCell>
-                <TableCell className="text-center">{customerdetail.customer.firstname} {customerdetail.customer.lastname}</TableCell>
+                <TableCell className="text-center">{customerMap.get(customerdetail.customer_id) ?? customerdetail.customer_id}</TableCell>
                 <TableCell className="text-center">{customerdetail.phone_number}</TableCell>
                 <TableCell className="text-center">{customerdetail.address}</TableCell>
                 <TableCell className="text-center">{customerdetail.province}</TableCell>

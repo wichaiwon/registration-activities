@@ -139,8 +139,12 @@ const ItemList: React.FC = () => {
               </TableRow>
             ) : (
               customers.map((customer: Customer) => (
-                <TableRow key={customer.id}>
-                  <TableCell>
+                <TableRow
+                  key={customer.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => router.push(`/customer-detail/edit/${customer.id}`)}
+                >
+                  <TableCell onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-2 justify-center items-center">
                       <Button
                         onClick={() => router.push(`/customer/edit/${customer.id}`)}
