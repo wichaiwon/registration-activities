@@ -40,7 +40,9 @@ export const getApiConfig = () => {
 export const getCustomers = async (
     page: number,
     pageSize: number,
-    search?: string
+    search?: string,
+    sortColumn?: string,
+    sortDirection?: 'asc' | 'desc'
 ): Promise<PaginatedResponse<Customer>> => {
     const session = await getSession()
     const { url, apiKey } = getApiConfig()
@@ -49,7 +51,8 @@ export const getCustomers = async (
     const searchQuery = search
         ? `&or=(firstname.ilike.*${search}*,lastname.ilike.*${search}*)`
         : ''
-    const response = await axios.get(`${url}?select=*${searchQuery}`, {
+    const orderQuery = sortColumn ? `&order=${sortColumn}.${sortDirection ?? 'asc'}` : ''
+    const response = await axios.get(`${url}?select=*${searchQuery}${orderQuery}`, {
         headers: {
             apikey: apiKey,
             Authorization: `Bearer ${session.access_token}`,

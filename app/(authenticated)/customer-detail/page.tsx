@@ -13,32 +13,25 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Customer } from '@/lib/customer'
-import { fetchCustomers, removeCustomer } from './actions'
-import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, EditIcon, PlusIcon, TrashIcon } from 'lucide-react'
+import { EditIcon, PlusIcon, TrashIcon } from 'lucide-react'
 import React, { useState } from 'react'
-import useSWR from 'swr'
 import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
+import { fetchCustomerDetails } from './actions'
 
-const ItemList: React.FC = () => {
+const CustomerDetail: React.FC = () => {
   const router = useRouter()
   const [page, setPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
   const [search, setSearch] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState<string>('')
-  const [sortColumn, setSortColumn] = useState<string>('')
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const { data, isLoading, mutate } = useSWR(
-    ['customers', page, pageSize, searchQuery, sortColumn, sortDirection],
-    () => fetchCustomers(page, pageSize, searchQuery, sortColumn, sortDirection),
-
-    {
-      keepPreviousData: true,
-    }
+    ['customerDetails', page, pageSize, searchQuery],
+    () => fetchCustomerDetails(page, pageSize, searchQuery),
+    { keepPreviousData: true }
   )
-  const customers = data && data.data ? data.data : []
-  const totalPages = data && data.totalPages ? data.totalPages : 1
-
+  const customerDetails = data?.data ?? []
+  const totalPages = data?.totalPages ?? 1
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return
     setPage(newPage)
@@ -49,27 +42,10 @@ const ItemList: React.FC = () => {
     setSearchQuery(search)
   }
 
-  const handleSort = (column: string) => {
-    if (sortColumn === column) {
-      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
-    } else {
-      setSortColumn(column)
-      setSortDirection('asc')
-    }
-    setPage(1)
-  }
-
-  const SortIcon = ({ column }: { column: string }) => {
-    if (sortColumn !== column) return <ArrowUpDownIcon className="inline ml-1 h-3 w-3 opacity-40" />
-    return sortDirection === 'asc'
-      ? <ArrowUpIcon className="inline ml-1 h-3 w-3" />
-      : <ArrowDownIcon className="inline ml-1 h-3 w-3" />
-  }
-  
   return (
-    <div className="h-full">
+    <div className="h-full overflow-x-hidden">
       <div className="flex flex-col gap-4">
-        <p className="text-2xl font-bold">Item List</p>
+        <p className="text-2xl font-bold">Customer Detail</p>
         <div className="flex justify-between items-center gap-4">
           <NativeSelect
             className="w-fit"
@@ -96,30 +72,30 @@ const ItemList: React.FC = () => {
           </Button>
         </div>
         <div className="flex w-full justify-end items-center">
-          <Button variant="secondary" size={'lg'} onClick={() => router.push(`/customer/add`)}>
+          <Button variant="secondary" size={'lg'} onClick={() => router.push(`/customer-detail/add`)}>
             <span>Add Item</span>
             <PlusIcon />
           </Button>
         </div>
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-center">action</TableHead>
               {[
-                { key: 'firstname', label: 'firstName' },
-                { key: 'lastname', label: 'lastName' },
-                { key: 'created_by', label: 'createdBy' },
-                { key: 'created_at', label: 'createdAt' },
-                { key: 'updated_by', label: 'updatedBy' },
-                { key: 'updated_at', label: 'updatedAt' },
+                { key: 'action', label: 'action', className: 'text-center' },
+                { key: 'firstname-lastname', label: 'firstName-lastname', className: 'text-center' },
+                { key: 'phone_number', label: 'phoneNumber', className: 'text-center' },
+                { key: 'address', label: 'address', className: 'text-center' },
+                { key: 'province', label: 'province', className: 'text-center' },
+                { key: 'district', label: 'district', className: 'text-center' },
+                { key: 'sub_district', label: 'subDistrict', className: 'text-center' },
+                { key: 'created_by', label: 'createdBy', className: 'text-center' },
+                { key: 'created_at', label: 'createdAt', className: 'text-center' },
+                { key: 'updated_by', label: 'updatedBy', className: 'text-center' },
+                { key: 'updated_at', label: 'updatedAt', className: 'text-center' },
               ].map((col) => (
-                <TableHead
-                  key={col.key}
-                  className="text-center cursor-pointer select-none hover:bg-muted/50"
-                  onClick={() => handleSort(col.key)}
-                >
+                <TableHead key={col.key} className={col.className}>
                   {col.label}
-                  <SortIcon column={col.key} />
                 </TableHead>
               ))}
             </TableRow>
@@ -127,55 +103,51 @@ const ItemList: React.FC = () => {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">
-                  Loading...
-                </TableCell>
+                <TableCell colSpan={11} className="text-center">Loading...</TableCell>
               </TableRow>
-            ) : customers.length === 0 ? (
+            ) : customerDetails.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">
-                  No data
-                </TableCell>
+                <TableCell colSpan={11} className="text-center">No data</TableCell>
               </TableRow>
-            ) : (
-              customers.map((customer: Customer) => (
-                <TableRow key={customer.id}>
-                  <TableCell>
-                    <div className="flex gap-2 justify-center items-center">
-                      <Button
-                        onClick={() => router.push(`/customer/edit/${customer.id}`)}
-                        variant="outline"
-                        className="text-yellow-500 hover:text-yellow-600 hover:border-yellow-600 border-yellow-500"
-                        size={'sm'}
-                      >
-                        <EditIcon />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="text-red-500 border-red-500 hover:text-red-600 hover:border-red-600"
-                        size={'sm'}
-                        onClick={async () => {
-                          await removeCustomer(customer.id)
-                          mutate()
-                        }}
-                      >
-                        <TrashIcon />
-                      </Button>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">{customer.firstname}</TableCell>
-                  <TableCell className="text-center">{customer.lastname}</TableCell>
-                  <TableCell className="text-center">{customer.created_by}</TableCell>
-                  <TableCell className="text-center">{new Date(customer.created_at).toLocaleDateString()}</TableCell>
-                  <TableCell className="text-center">{customer.updated_by}</TableCell>
-                  <TableCell className="text-center">{new Date(customer.updated_at).toLocaleDateString()}</TableCell>
-                </TableRow>
-              ))
-            )}
+            ) : customerDetails.map((customerdetail) => (
+              <TableRow key={customerdetail.id}>
+                <TableCell>
+                  <div className="flex gap-2 justify-center items-center">
+                    <Button
+                      onClick={() => router.push(`/customer-detail/edit/${customerdetail.id}`)}
+                      variant="outline"
+                      className="text-yellow-500 hover:text-yellow-600 hover:border-yellow-600 border-yellow-500"
+                      size={'sm'}
+                    >
+                      <EditIcon />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="text-red-500 border-red-500 hover:text-red-600 hover:border-red-600"
+                      size={'sm'}
+                      onClick={() => {}}
+                    >
+                      <TrashIcon />
+                    </Button>
+                  </div>
+                </TableCell>
+                <TableCell className="text-center">{customerdetail.customer.firstname} {customerdetail.customer.lastname}</TableCell>
+                <TableCell className="text-center">{customerdetail.phone_number}</TableCell>
+                <TableCell className="text-center">{customerdetail.address}</TableCell>
+                <TableCell className="text-center">{customerdetail.province}</TableCell>
+                <TableCell className="text-center">{customerdetail.district}</TableCell>
+                <TableCell className="text-center">{customerdetail.sub_district}</TableCell>
+                <TableCell className="text-center">{customerdetail.created_by}</TableCell>
+                <TableCell className="text-center">{new Date(customerdetail.created_at).toLocaleDateString()}</TableCell>
+                <TableCell className="text-center">{customerdetail.updated_by}</TableCell>
+                <TableCell className="text-center">{new Date(customerdetail.updated_at).toLocaleDateString()}</TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
+        </div>
         <div className="flex w-full justify-end items-center">
-          <Button variant="secondary" size={'lg'} onClick={() => router.push(`/customer/add`)}>
+          <Button variant="secondary" size={'lg'} onClick={() => router.push(`/customer-detail/add`)}>
             <span>Add Item</span>
             <PlusIcon />
           </Button>
@@ -209,7 +181,6 @@ const ItemList: React.FC = () => {
                     <PaginationEllipsis />
                   </PaginationItem>
                 )}
-                {/* สร้าง array ของเลขหน้าที่ต้องแสดง (ไม่ซ้ำ) */}
                 {Array.from(new Set([...[page - 1, page, page + 1].filter((n) => n > 1 && n < totalPages)])).map(
                   (pageNumber) => (
                     <PaginationItem key={`middle-${pageNumber}`}>
@@ -273,4 +244,4 @@ const ItemList: React.FC = () => {
   )
 }
 
-export default ItemList
+export default CustomerDetail

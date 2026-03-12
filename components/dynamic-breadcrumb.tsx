@@ -13,6 +13,7 @@ import {
 
 const segmentLabels: Record<string, string> = {
   customer: 'Customer',
+  'customer-detail': 'Customer Detail',
   'item-list': 'Item List',
   add: 'Add',
   edit: 'Edit',

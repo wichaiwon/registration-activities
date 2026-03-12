@@ -10,8 +10,8 @@ import {
   PaginatedResponse,
 } from '@/lib/customer'
 
-export async function fetchCustomers(page: number, pageSize: number,search?:string): Promise<PaginatedResponse<Customer>> {
-  return getCustomers(page, pageSize,search)
+export async function fetchCustomers(page: number, pageSize: number, search?: string, sortColumn?: string, sortDirection?: 'asc' | 'desc'): Promise<PaginatedResponse<Customer>> {
+  return getCustomers(page, pageSize, search, sortColumn, sortDirection)
 }
 
 export async function fetchCustomerById(id: string): Promise<Customer> {
