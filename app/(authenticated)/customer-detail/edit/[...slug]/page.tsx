@@ -14,6 +14,7 @@ const EditCustomerDetail: React.FC = () => {
   const pathname = usePathname().split('/')
   const detailId = pathname[pathname.length - 1]
 
+  const [recordId, setRecordId] = useState<string>('')
   const [phoneNumber, setPhoneNumber] = useState<string>('')
   const [address, setAddress] = useState<string>('')
   const [selectedProvince, setSelectedProvince] = useState<string>('')
@@ -25,6 +26,7 @@ const EditCustomerDetail: React.FC = () => {
     () => fetchCustomerDetailByCustomerId(detailId),
     {
       onSuccess: (data) => {
+        setRecordId(data.id)
         setPhoneNumber(data.phone_number)
         setAddress(data.address)
         setSelectedProvince(data.province)
@@ -46,7 +48,7 @@ const EditCustomerDetail: React.FC = () => {
       })
       return
     }
-    await editCustomerDetail(detailId, phoneNumber, address, selectedProvince, selectedDistrict, selectedSubDistrict)
+    await editCustomerDetail(recordId, phoneNumber, address, selectedProvince, selectedDistrict, selectedSubDistrict)
       .then(() => {
         toast('แก้ไขข้อมูลสำเร็จ', {
           description: `แก้ไขข้อมูลลูกค้าเรียบร้อยแล้ว`,
